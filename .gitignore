@@ -7,6 +7,7 @@ data/
 posting-tracker.json
 *.json
 !package.json
+!data-backup.json
 
 # Environment & credentials
 .env

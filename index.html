@@ -848,6 +848,15 @@
         Mark Today Done
       </button>
 
+      <button class="btn" id="backupJsonBtn" title="Download complete JSON backup file">
+        💾 Backup JSON
+      </button>
+
+      <button class="btn" id="restoreJsonBtn" title="Restore posts from a JSON backup file">
+        📂 Restore
+      </button>
+      <input type="file" id="restoreJsonInput" accept=".json" style="display:none">
+
       <button class="btn btn-icon-only" id="soundToggleBtn" title="Toggle audio click feedback">
         <span id="soundIcon">🔊</span>
       </button>
@@ -1007,13 +1016,57 @@
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  // Fresh store state by default for every user/visitor
+  // EMBEDDED MEMORY (All 41 verified posts preserved)
+  const SAVED_POSTS = {
+    "2026-10-05_08:00": { "date": "2026-10-05", "slot": "08:00", "posted": true, "postedAt": "2026-10-05T05:05:20.702Z", "note": "Oct 5 Morning Post" },
+    "2026-10-05_14:00": { "date": "2026-10-05", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:51.123Z", "note": "" },
+    "2026-10-05_20:00": { "date": "2026-10-05", "slot": "20:00", "posted": true, "postedAt": "2026-10-05T14:30:11.252Z", "note": "Oct 5 Evening Post" },
+    "2026-10-06_08:00": { "date": "2026-10-06", "slot": "08:00", "posted": true, "postedAt": "2026-10-06T03:30:04.865Z", "note": "Oct 6 Morning Post" },
+    "2026-10-06_14:00": { "date": "2026-10-06", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:52.457Z", "note": "" },
+    "2026-10-06_20:00": { "date": "2026-10-06", "slot": "20:00", "posted": true, "postedAt": "2026-10-06T14:30:05.244Z", "note": "Oct 6 Evening Post" },
+    "2026-10-07_08:00": { "date": "2026-10-07", "slot": "08:00", "posted": true, "postedAt": "2026-10-07T03:30:06.693Z", "note": "Oct 7 Morning Post" },
+    "2026-10-07_14:00": { "date": "2026-10-07", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:53.271Z", "note": "" },
+    "2026-10-07_20:00": { "date": "2026-10-07", "slot": "20:00", "posted": true, "postedAt": "2026-10-07T14:30:19.540Z", "note": "Oct 7 Evening Post" },
+    "2026-10-08_08:00": { "date": "2026-10-08", "slot": "08:00", "posted": true, "postedAt": "2026-10-08T03:30:06.376Z", "note": "Oct 8 Morning Post" },
+    "2026-10-08_14:00": { "date": "2026-10-08", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:54.473Z", "note": "" },
+    "2026-10-08_20:00": { "date": "2026-10-08", "slot": "20:00", "posted": true, "postedAt": "2026-10-08T14:30:11.956Z", "note": "Oct 8 Evening Post" },
+    "2026-10-09_08:00": { "date": "2026-10-09", "slot": "08:00", "posted": true, "postedAt": "2026-10-09T03:30:03.876Z", "note": "Oct 9 Morning Post" },
+    "2026-10-09_14:00": { "date": "2026-10-09", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:56.522Z", "note": "" },
+    "2026-10-09_20:00": { "date": "2026-10-09", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:56.522Z", "note": "" },
+    "2026-10-10_08:00": { "date": "2026-10-10", "slot": "08:00", "posted": true, "postedAt": "2026-10-15T05:20:57.522Z", "note": "" },
+    "2026-10-10_14:00": { "date": "2026-10-10", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:57.522Z", "note": "" },
+    "2026-10-10_20:00": { "date": "2026-10-10", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:57.522Z", "note": "" },
+    "2026-10-11_08:00": { "date": "2026-10-11", "slot": "08:00", "posted": true, "postedAt": "2026-10-15T05:20:58.622Z", "note": "" },
+    "2026-10-11_14:00": { "date": "2026-10-11", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:58.622Z", "note": "" },
+    "2026-10-11_20:00": { "date": "2026-10-11", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:58.622Z", "note": "" },
+    "2026-10-12_08:00": { "date": "2026-10-12", "slot": "08:00", "posted": true, "postedAt": "2026-10-15T05:20:03.771Z", "note": "" },
+    "2026-10-12_14:00": { "date": "2026-10-12", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:05.736Z", "note": "" },
+    "2026-10-12_20:00": { "date": "2026-10-12", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:06.235Z", "note": "" },
+    "2026-10-13_08:00": { "date": "2026-10-13", "slot": "08:00", "posted": true, "postedAt": "2026-10-15T05:20:07.019Z", "note": "" },
+    "2026-10-13_14:00": { "date": "2026-10-13", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:08.119Z", "note": "" },
+    "2026-10-13_20:00": { "date": "2026-10-13", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:08.119Z", "note": "" },
+    "2026-10-14_08:00": { "date": "2026-10-14", "slot": "08:00", "posted": true, "postedAt": "2026-10-15T05:20:09.269Z", "note": "" },
+    "2026-10-14_14:00": { "date": "2026-10-14", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:20:09.269Z", "note": "" },
+    "2026-10-14_20:00": { "date": "2026-10-14", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:09.269Z", "note": "" },
+    "2026-10-15_08:00": { "date": "2026-10-15", "slot": "08:00", "posted": true, "postedAt": "2026-10-15T05:20:13.202Z", "note": "" },
+    "2026-10-15_20:00": { "date": "2026-10-15", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:20:18.169Z", "note": "" },
+    "2026-10-16_14:00": { "date": "2026-10-16", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:22:40.092Z", "note": "" },
+    "2026-10-16_20:00": { "date": "2026-10-16", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:22:44.022Z", "note": "" },
+    "2026-10-17_14:00": { "date": "2026-10-17", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:36:22.091Z", "note": "" },
+    "2026-10-17_20:00": { "date": "2026-10-17", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:22:46.592Z", "note": "" },
+    "2026-10-18_14:00": { "date": "2026-10-18", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:36:28.020Z", "note": "" },
+    "2026-10-18_20:00": { "date": "2026-10-18", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:36:28.703Z", "note": "" },
+    "2026-10-19_20:00": { "date": "2026-10-19", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:36:36.138Z", "note": "" },
+    "2026-10-20_20:00": { "date": "2026-10-20", "slot": "20:00", "posted": true, "postedAt": "2026-10-15T05:22:52.388Z", "note": "" },
+    "2026-10-23_14:00": { "date": "2026-10-23", "slot": "14:00", "posted": true, "postedAt": "2026-10-15T05:23:06.609Z", "note": "" }
+  };
+
   let store = {
     version: 1,
     updatedAt: new Date().toISOString(),
     slots: SLOTS,
     slotLabels: SLOT_LABELS,
-    posts: {}
+    posts: { ...SAVED_POSTS }
   };
   let stats = {};
   let currentMonday = getMondayOf(new Date());
@@ -1079,14 +1132,17 @@
 
   function loadFromStorage() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("linkedin_tracker_store");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed.posts === "object") {
-          store = parsed;
+        if (parsed && typeof parsed.posts === "object" && Object.keys(parsed.posts).length > 0) {
+          store.posts = { ...SAVED_POSTS, ...parsed.posts };
+          return;
         }
       }
     } catch(e) {}
+    store.posts = { ...SAVED_POSTS };
+    saveToStorage();
   }
 
   function saveToStorage() {
@@ -1631,6 +1687,48 @@
     showToast("Note saved");
   }
 
+  // JSON Backup and Restore
+  function backupJSON() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(store, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute("href", dataStr);
+    dlAnchor.setAttribute("download", `linkedin-posts-backup-${formatYMD(new Date())}.json`);
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
+    showToast("JSON backup downloaded!");
+  }
+
+  function handleRestoreFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        if (parsed && typeof parsed.posts === "object") {
+          store.posts = { ...parsed.posts };
+          saveToStorage();
+          updateUI();
+          showToast(`Restored ${Object.keys(store.posts).length} posts successfully!`);
+          if (window.location.protocol === "http:" && window.location.port) {
+            fetch("/api/tracker/restore", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ store })
+            }).catch(() => {});
+          }
+        } else {
+          alert("Invalid backup file format. Expected a valid JSON object with posts.");
+        }
+      } catch(err) {
+        alert("Error parsing JSON file: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
   // Client-side CSV Export
   function exportCSV() {
     let csv = "date,slot,time_label,posted,posted_at,note\n";
@@ -1665,6 +1763,16 @@
   }
 
   // EVENT LISTENERS
+  const backupBtn = document.getElementById("backupJsonBtn");
+  if (backupBtn) backupBtn.addEventListener("click", backupJSON);
+
+  const restoreBtn = document.getElementById("restoreJsonBtn");
+  const restoreInput = document.getElementById("restoreJsonInput");
+  if (restoreBtn && restoreInput) {
+    restoreBtn.addEventListener("click", () => restoreInput.click());
+    restoreInput.addEventListener("change", handleRestoreFile);
+  }
+
   document.getElementById("prevWeekBtn").addEventListener("click", () => {
     currentMonday = addDays(currentMonday, -7);
     updateUI();
