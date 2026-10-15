@@ -1,0 +1,20 @@
+{
+  "name": "linkedin-post-tracker",
+  "version": "1.0.0",
+  "description": "Minimalist LinkedIn daily post scheduler & cadence tracker (8am · 2pm · 8pm)",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "linkedin",
+    "scheduler",
+    "tracker",
+    "cadence",
+    "habit-tracker",
+    "productivity"
+  ],
+  "author": "Ashutosh Singh",
+  "license": "MIT",
+  "homepage": "https://ashu0852.github.io/linkedin-post-tracker/"
+}

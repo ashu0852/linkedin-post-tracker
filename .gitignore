@@ -1,0 +1,23 @@
+# Personal & local data - never commit data
+data/
+*.data
+*.log
+*.tmp
+*.local
+posting-tracker.json
+*.json
+!package.json
+
+# Environment & credentials
+.env
+.env.*
+!.env.example
+
+# OS & editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/

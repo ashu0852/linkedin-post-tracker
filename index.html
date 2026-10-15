@@ -1,0 +1,1468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinkedIn Post Tracker (8am · 2pm · 8pm)</title>
+<meta name="description" content="Simple, minimalist LinkedIn daily post tracker. Track your 3 daily posts (8 AM, 2 PM, 8 PM) in a clean 7-day row.">
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --card-border: #e2e8f0;
+    --card-hover: #f1f5f9;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --line: #e2e8f0;
+    
+    --linkedin-blue: #0a66c2;
+    --linkedin-dark: #004182;
+    --linkedin-light: #e8f3ff;
+    --linkedin-glow: rgba(10, 102, 194, 0.25);
+    
+    --success: #10b981;
+    --success-bg: #ecfdf5;
+    --success-border: #a7f3d0;
+    
+    --warning: #f59e0b;
+    --warning-bg: #fffbeb;
+    
+    --circle-size: 52px;
+    --circle-unselected-bg: #ffffff;
+    --circle-unselected-border: #cbd5e1;
+    --circle-unselected-text: #475569;
+    --circle-hover-border: #0a66c2;
+    
+    --circle-selected-bg: #0a66c2;
+    --circle-selected-text: #ffffff;
+    
+    --radius: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 24px 20px 80px;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1420px;
+    margin: 0 auto;
+  }
+
+  /* TOP HEADER */
+  header.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0a66c2, #004182);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    box-shadow: 0 4px 10px var(--linkedin-glow);
+  }
+
+  .brand-text h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-text p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+
+  .slot-cadence-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--linkedin-light);
+    color: var(--linkedin-blue);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.15s ease;
+    user-select: none;
+    text-decoration: none;
+  }
+
+  .btn:hover {
+    background: var(--card-hover);
+    border-color: var(--text-faint);
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn-primary {
+    background: var(--linkedin-blue);
+    color: #ffffff;
+    border-color: var(--linkedin-blue);
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.08);
+  }
+
+  .btn-icon-only {
+    padding: 8px;
+    border-radius: 9px;
+  }
+
+  /* STATS BANNER */
+  .stats-banner {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .stat-icon.fire { background: #fee2e2; color: #ef4444; }
+  .stat-icon.today { background: var(--linkedin-light); color: var(--linkedin-blue); }
+  .stat-icon.week { background: #fef3c7; color: #f59e0b; }
+  .stat-icon.total { background: #ede9fe; color: #8b5cf6; }
+
+  .stat-info .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .stat-info .stat-label {
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+
+  /* TOOLBAR: NAVIGATION & VIEW SWITCHER */
+  .nav-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .nav-arrows {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .current-range-text {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    min-width: 250px;
+  }
+
+  .view-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .segmented-control {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+  }
+
+  .segmented-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .segmented-btn.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* INSTRUCTIONS HINT */
+  .hint-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding: 0 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .hint-bar .sync-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+
+  /* WEEKS CONTAINER */
+  .weeks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .week-wrapper {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 16px 18px 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .week-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .week-badge {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    color: var(--text-muted);
+  }
+
+  .week-progress-pill {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  /* ONE ROW HAS SEVEN THINGS: 7 DAYS GRID */
+  .week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 1024px) {
+    .week-row {
+      overflow-x: auto;
+      grid-template-columns: repeat(7, minmax(130px, 1fr));
+      padding-bottom: 8px;
+    }
+  }
+
+  /* DAY COLUMN (ONE OF THE 7 THINGS) */
+  .day-col {
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .day-col:hover {
+    border-color: var(--text-faint);
+  }
+
+  .day-col.is-today {
+    background: var(--linkedin-light);
+    border-color: var(--linkedin-blue);
+    box-shadow: 0 0 0 1px var(--linkedin-blue);
+  }
+
+  .day-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 14px;
+    position: relative;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .day-name {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+
+  .day-date-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .day-number {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .day-month {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .today-pill {
+    background: var(--linkedin-blue);
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+
+  .day-actions {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+  }
+
+  .day-toggle-all {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-faint);
+    padding: 3px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+  }
+
+  .day-toggle-all:hover {
+    color: var(--linkedin-blue);
+    background: rgba(0,0,0,0.05);
+  }
+
+  /* 3 POSTS PER DAY: CIRCLES */
+  .slots-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .slot-item {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding: 4px 0;
+    border-radius: 8px;
+    transition: background 0.15s;
+  }
+
+  .slot-item:hover {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  /* THE CIRCLE BUTTON */
+  .circle-btn {
+    width: var(--circle-size);
+    height: var(--circle-size);
+    border-radius: 50%;
+    border: 2.5px solid var(--circle-unselected-border);
+    background: var(--circle-unselected-bg);
+    color: var(--circle-unselected-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
+  }
+
+  .circle-btn:hover {
+    border-color: var(--circle-hover-border);
+    transform: scale(1.06);
+    box-shadow: var(--shadow-md);
+  }
+
+  .circle-btn:active {
+    transform: scale(0.92);
+  }
+
+  .circle-btn:focus-visible {
+    outline: 2px solid var(--linkedin-blue);
+    outline-offset: 2px;
+  }
+
+  /* SELECTED STATE */
+  .circle-btn.selected {
+    background: var(--circle-selected-bg);
+    border-color: var(--circle-selected-bg);
+    color: var(--circle-selected-text);
+    box-shadow: 0 4px 12px var(--linkedin-glow);
+    animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
+  .circle-btn:not(.selected) .check-icon {
+    display: none;
+  }
+
+  .circle-btn.selected .time-abbrev {
+    display: none;
+  }
+
+  .circle-btn.selected .check-icon {
+    display: block;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .circle-btn:not(.selected) .time-abbrev {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  /* TIME LABEL BELOW CIRCLE */
+  .slot-label {
+    margin-top: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .slot-item.is-selected .slot-label {
+    color: var(--linkedin-blue);
+    font-weight: 700;
+  }
+
+  .has-note-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--warning);
+    display: inline-block;
+  }
+
+  /* FOOTER */
+  footer.app-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  footer.app-footer a {
+    color: var(--linkedin-blue);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  footer.app-footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* MODAL */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .modal-header h3 {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .modal-body textarea {
+    width: 100%;
+    min-height: 90px;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 10px;
+    color: var(--text);
+    font: inherit;
+    font-size: 13.5px;
+    resize: vertical;
+    outline: none;
+    margin-bottom: 14px;
+  }
+
+  .modal-body textarea:focus {
+    border-color: var(--linkedin-blue);
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--text);
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all 0.2s ease;
+    z-index: 999;
+    pointer-events: none;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- APP HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo-badge">in</div>
+      <div class="brand-text">
+        <h1>
+          LinkedIn Post Tracker
+          <span class="slot-cadence-pill">3 Posts Daily</span>
+        </h1>
+        <p>Click any circle to mark it posted or scheduled · 8:00 AM · 2:00 PM · 8:00 PM</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" id="markTodayAllBtn" title="Mark all 3 slots for today">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Mark Today Done
+      </button>
+
+      <button class="btn btn-icon-only" id="soundToggleBtn" title="Toggle audio click feedback">
+        <span id="soundIcon">🔊</span>
+      </button>
+
+      <button class="btn btn-icon-only" id="exportBtn" title="Download data as CSV">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- STATS BANNER -->
+  <section class="stats-banner">
+    <div class="stat-card">
+      <div class="stat-icon fire">🔥</div>
+      <div class="stat-info">
+        <div class="stat-value" id="streakVal">0 Days</div>
+        <div class="stat-label">Posting Streak</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon today">📅</div>
+      <div class="stat-info">
+        <div class="stat-value" id="todayVal">0 / 3</div>
+        <div class="stat-label">Today's Posts</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon week">📊</div>
+      <div class="stat-info">
+        <div class="stat-value" id="weekVal">0 / 21</div>
+        <div class="stat-label">This Week (0%)</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon total">🏆</div>
+      <div class="stat-info">
+        <div class="stat-value" id="totalVal">0</div>
+        <div class="stat-label">Total Logged</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLBAR -->
+  <section class="nav-toolbar">
+    <div class="nav-arrows">
+      <button class="btn" id="prevWeekBtn" title="Previous Week">‹ Previous</button>
+      <button class="btn" id="todayBtn" title="Jump to current week">Today</button>
+      <button class="btn" id="nextWeekBtn" title="Next Week">Next ›</button>
+      <span class="current-range-text" id="dateRangeText">Loading...</span>
+    </div>
+
+    <div class="view-controls">
+      <div class="segmented-control">
+        <button class="segmented-btn active" data-view="1">1 Week Row</button>
+        <button class="segmented-btn" data-view="3">3 Weeks</button>
+        <button class="segmented-btn" data-view="4">4 Weeks</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- HINT & STATUS -->
+  <div class="hint-bar">
+    <span>💡 <strong>Tip:</strong> Click any circle to toggle it on or off. Click the small check at top right of any day to mark all 3 at once.</span>
+    <span class="sync-indicator">
+      <span class="pulse-dot"></span>
+      <span id="syncText">Browser Synced (Private)</span>
+    </span>
+  </div>
+
+  <!-- WEEKS CONTAINER (ONE ROW HAS SEVEN THINGS) -->
+  <main class="weeks-container" id="weeksContainer">
+    <!-- Populated by JavaScript -->
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <div>
+      LinkedIn Post Tracker · Open source on <a href="https://github.com/ashu0852/linkedin-post-tracker" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div>
+      <button class="btn" id="resetDataBtn" style="font-size:12px;padding:4px 10px;color:var(--text-muted)">Clear My Data</button>
+    </div>
+  </footer>
+</div>
+
+<!-- OPTIONAL NOTE MODAL -->
+<div class="modal-backdrop" id="noteModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="noteModalTitle">Post Note</h3>
+      <button class="modal-close" id="closeNoteModal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:8px" id="noteModalSubtitle"></p>
+      <textarea id="noteInput" placeholder="Optional: Note post topic, headline, or LinkedIn URL..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="cancelNoteBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveNoteBtn">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  const SLOTS = ["08:00", "14:00", "20:00"];
+  const SLOT_LABELS = {
+    "08:00": "8 am",
+    "14:00": "2 pm",
+    "20:00": "8 pm"
+  };
+  const SLOT_NAMES = {
+    "08:00": "8:00 AM",
+    "14:00": "2:00 PM",
+    "20:00": "8:00 PM"
+  };
+
+  const FULL_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  // Fresh store state by default for every user/visitor
+  let store = {
+    version: 1,
+    updatedAt: new Date().toISOString(),
+    slots: SLOTS,
+    slotLabels: SLOT_LABELS,
+    posts: {}
+  };
+  let stats = {};
+  let currentMonday = getMondayOf(new Date());
+  let viewMode = 1; // 1 week row, 3 weeks, 4 weeks
+  let soundEnabled = true;
+
+  // Audio Context for subtle click
+  let audioCtx = null;
+  function playClickSound(isSelected) {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      const freq = isSelected ? 659.25 : 440;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+    } catch(e) {}
+  }
+
+  // Toast
+  let toastTimer = null;
+  function showToast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  }
+
+  // Date utilities
+  function formatYMD(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function getMondayOf(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const mon = new Date(d.setDate(diff));
+    mon.setHours(0, 0, 0, 0);
+    return mon;
+  }
+
+  function addDays(d, n) {
+    const res = new Date(d);
+    res.setDate(res.getDate() + n);
+    return res;
+  }
+
+  // Local Storage (Client-side persistence)
+  const STORAGE_KEY = "linkedin_post_tracker_data";
+
+  function loadFromStorage() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed.posts === "object") {
+          store = parsed;
+        }
+      }
+    } catch(e) {}
+  }
+
+  function saveToStorage() {
+    store.updatedAt = new Date().toISOString();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    } catch(e) {}
+  }
+
+  // Dual-mode sync: if on localhost with backend API, sync too
+  async function syncWithBackendIfAvailable() {
+    if (window.location.protocol === "http:" && window.location.port) {
+      try {
+        const res = await fetch("/api/tracker");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.store && Object.keys(data.store.posts || {}).length > 0) {
+            store = data.store;
+            saveToStorage();
+          }
+          document.getElementById("syncText").textContent = "Localhost Synced";
+        }
+      } catch(e) {
+        document.getElementById("syncText").textContent = "Browser Synced (Private)";
+      }
+    } else {
+      document.getElementById("syncText").textContent = "Browser Synced (Private)";
+    }
+    updateUI();
+  }
+
+  function toggleSlot(date, slot, explicitVal) {
+    const key = `${date}_${slot}`;
+    const cur = store.posts[key];
+    const willBePosted = explicitVal !== undefined ? explicitVal : !cur?.posted;
+
+    if (willBePosted) {
+      store.posts[key] = {
+        date,
+        slot,
+        posted: true,
+        postedAt: new Date().toISOString(),
+        note: cur?.note || ""
+      };
+    } else {
+      if (cur?.note) {
+        store.posts[key] = { date, slot, posted: false, note: cur.note };
+      } else {
+        delete store.posts[key];
+      }
+    }
+
+    saveToStorage();
+    playClickSound(willBePosted);
+    updateUI();
+
+    const slotLabel = SLOT_LABELS[slot] || slot;
+    showToast(willBePosted ? `Marked ${slotLabel} on ${date}` : `Unmarked ${slotLabel} on ${date}`);
+
+    // Optional localhost API sync
+    if (window.location.protocol === "http:" && window.location.port) {
+      fetch("/api/tracker/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, slot, posted: willBePosted })
+      }).catch(() => {});
+    }
+  }
+
+  function toggleDay(date) {
+    const slots = store.slots || SLOTS;
+    const allPosted = slots.every(s => store.posts[`${date}_${s}`]?.posted);
+    const targetVal = !allPosted;
+
+    for (const slot of slots) {
+      const key = `${date}_${slot}`;
+      const cur = store.posts[key];
+      if (targetVal) {
+        store.posts[key] = {
+          date,
+          slot,
+          posted: true,
+          postedAt: new Date().toISOString(),
+          note: cur?.note || ""
+        };
+      } else {
+        if (cur?.note) {
+          store.posts[key] = { date, slot, posted: false, note: cur.note };
+        } else {
+          delete store.posts[key];
+        }
+      }
+    }
+
+    saveToStorage();
+    playClickSound(targetVal);
+    updateUI();
+
+    showToast(targetVal ? `Marked all 3 posts for ${date}` : `Cleared posts for ${date}`);
+
+    if (window.location.protocol === "http:" && window.location.port) {
+      fetch("/api/tracker/toggle-day", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, posted: targetVal })
+      }).catch(() => {});
+    }
+  }
+
+  // Calculate stats client-side
+  function computeStats() {
+    const now = new Date();
+    const todayStr = formatYMD(now);
+    const slots = store.slots || SLOTS;
+
+    let totalPosted = 0;
+    const dayCounts = {};
+
+    for (const [k, p] of Object.entries(store.posts || {})) {
+      if (p && p.posted) {
+        totalPosted++;
+        dayCounts[p.date] = (dayCounts[p.date] || 0) + 1;
+      }
+    }
+
+    const todayCount = dayCounts[todayStr] || 0;
+
+    const mon = getMondayOf(now);
+    let thisWeekCount = 0;
+    for (let i = 0; i < 7; i++) {
+      const dStr = formatYMD(addDays(mon, i));
+      thisWeekCount += dayCounts[dStr] || 0;
+    }
+
+    let streak = 0;
+    let chk = new Date(now);
+    if ((dayCounts[todayStr] || 0) === 0) {
+      chk.setDate(chk.getDate() - 1);
+    }
+    while (true) {
+      const dStr = formatYMD(chk);
+      if ((dayCounts[dStr] || 0) > 0) {
+        streak++;
+        chk.setDate(chk.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return {
+      todayDate: todayStr,
+      todayCount,
+      todayTarget: slots.length,
+      thisWeekCount,
+      thisWeekTarget: 7 * slots.length,
+      currentStreak: streak,
+      totalPosted
+    };
+  }
+
+  function updateStatsBanner() {
+    const s = computeStats();
+    document.getElementById("streakVal").textContent = `${s.currentStreak} Day${s.currentStreak === 1 ? '' : 's'}`;
+    document.getElementById("todayVal").textContent = `${s.todayCount} / ${s.todayTarget}`;
+    const pct = Math.round((s.thisWeekCount / s.thisWeekTarget) * 100);
+    document.getElementById("weekVal").textContent = `${s.thisWeekCount} / ${s.thisWeekTarget} (${pct}%)`;
+    document.getElementById("totalVal").textContent = `${s.totalPosted}`;
+
+    const todayAllDone = (s.todayCount >= s.todayTarget);
+    const markTodayBtn = document.getElementById("markTodayAllBtn");
+    if (todayAllDone) {
+      markTodayBtn.innerHTML = `✓ Today Completed`;
+      markTodayBtn.style.background = "var(--success)";
+      markTodayBtn.style.borderColor = "var(--success)";
+    } else {
+      markTodayBtn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark Today Done`;
+      markTodayBtn.style.background = "";
+      markTodayBtn.style.borderColor = "";
+    }
+  }
+
+  // RENDER WEEKS
+  function updateUI() {
+    updateStatsBanner();
+
+    const weeksToRender = [];
+    if (viewMode === 1) {
+      weeksToRender.push(new Date(currentMonday));
+    } else if (viewMode === 3) {
+      weeksToRender.push(addDays(currentMonday, -7));
+      weeksToRender.push(new Date(currentMonday));
+      weeksToRender.push(addDays(currentMonday, 7));
+    } else if (viewMode === 4) {
+      weeksToRender.push(addDays(currentMonday, -7));
+      weeksToRender.push(new Date(currentMonday));
+      weeksToRender.push(addDays(currentMonday, 7));
+      weeksToRender.push(addDays(currentMonday, 14));
+    }
+
+    const startWeek = weeksToRender[0];
+    const endWeek = addDays(weeksToRender[weeksToRender.length - 1], 6);
+    const startMonth = FULL_MONTHS[startWeek.getMonth()];
+    const endMonth = FULL_MONTHS[endWeek.getMonth()];
+    if (startMonth === endMonth && startWeek.getFullYear() === endWeek.getFullYear()) {
+      document.getElementById("dateRangeText").textContent = `${startMonth} ${startWeek.getDate()} – ${endWeek.getDate()}, ${startWeek.getFullYear()}`;
+    } else {
+      document.getElementById("dateRangeText").textContent = `${startMonth} ${startWeek.getDate()} – ${endMonth} ${endWeek.getDate()}, ${endWeek.getFullYear()}`;
+    }
+
+    const container = document.getElementById("weeksContainer");
+    container.innerHTML = "";
+
+    const todayStr = formatYMD(new Date());
+
+    weeksToRender.forEach(monDate => {
+      const sunDate = addDays(monDate, 6);
+      const isCurrentWeek = (formatYMD(getMondayOf(new Date())) === formatYMD(monDate));
+
+      const wrapper = document.createElement("div");
+      wrapper.className = "week-wrapper";
+
+      const header = document.createElement("div");
+      header.className = "week-header";
+
+      const title = document.createElement("div");
+      title.className = "week-title";
+      const monStr = `${MONTHS[monDate.getMonth()]} ${monDate.getDate()}`;
+      const sunStr = `${MONTHS[sunDate.getMonth()]} ${sunDate.getDate()}`;
+      title.innerHTML = `Week: ${monStr} – ${sunStr} ${isCurrentWeek ? '<span class="week-badge">Current Week</span>' : ''}`;
+
+      let weekCount = 0;
+      for (let i = 0; i < 7; i++) {
+        const dStr = formatYMD(addDays(monDate, i));
+        for (const s of SLOTS) {
+          if (store.posts[`${dStr}_${s}`]?.posted) weekCount++;
+        }
+      }
+
+      const progress = document.createElement("div");
+      progress.className = "week-progress-pill";
+      progress.textContent = `${weekCount} / 21 posts (${Math.round((weekCount / 21) * 100)}%)`;
+
+      header.appendChild(title);
+      header.appendChild(progress);
+      wrapper.appendChild(header);
+
+      const weekRow = document.createElement("div");
+      weekRow.className = "week-row";
+
+      for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+        const dayDate = addDays(monDate, dayIdx);
+        const dayDateStr = formatYMD(dayDate);
+        const isToday = (dayDateStr === todayStr);
+
+        const col = document.createElement("div");
+        col.className = `day-col ${isToday ? "is-today" : ""}`;
+
+        const dayAllPosted = SLOTS.every(s => store.posts[`${dayDateStr}_${s}`]?.posted);
+
+        const dayHeader = document.createElement("div");
+        dayHeader.className = "day-header";
+
+        const dayName = document.createElement("div");
+        dayName.className = "day-name";
+        dayName.textContent = FULL_DAYS[dayIdx];
+
+        const dateWrap = document.createElement("div");
+        dateWrap.className = "day-date-wrap";
+
+        const dayNum = document.createElement("div");
+        dayNum.className = "day-number";
+        dayNum.textContent = dayDate.getDate();
+
+        const monthName = document.createElement("div");
+        monthName.className = "day-month";
+        monthName.textContent = MONTHS[dayDate.getMonth()];
+
+        dateWrap.appendChild(dayNum);
+        dateWrap.appendChild(monthName);
+
+        dayHeader.appendChild(dayName);
+        dayHeader.appendChild(dateWrap);
+
+        if (isToday) {
+          const todayBadge = document.createElement("div");
+          todayBadge.className = "today-pill";
+          todayBadge.textContent = "Today";
+          dayHeader.appendChild(todayBadge);
+        }
+
+        const actionWrap = document.createElement("div");
+        actionWrap.className = "day-actions";
+        const toggleAllBtn = document.createElement("button");
+        toggleAllBtn.className = "day-toggle-all";
+        toggleAllBtn.title = dayAllPosted ? "Clear all posts for this day" : "Mark all 3 posts for this day";
+        toggleAllBtn.innerHTML = dayAllPosted
+          ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+          : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle></svg>`;
+        
+        toggleAllBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleDay(dayDateStr);
+        });
+        actionWrap.appendChild(toggleAllBtn);
+        dayHeader.appendChild(actionWrap);
+
+        col.appendChild(dayHeader);
+
+        const slotsList = document.createElement("div");
+        slotsList.className = "slots-list";
+
+        SLOTS.forEach(slot => {
+          const key = `${dayDateStr}_${slot}`;
+          const post = store.posts[key];
+          const isSelected = !!post?.posted;
+          const label = SLOT_LABELS[slot] || slot;
+          const fullName = SLOT_NAMES[slot] || slot;
+
+          const slotItem = document.createElement("div");
+          slotItem.className = `slot-item ${isSelected ? "is-selected" : ""}`;
+          slotItem.setAttribute("role", "button");
+          slotItem.setAttribute("tabindex", "0");
+          slotItem.setAttribute("aria-pressed", isSelected ? "true" : "false");
+          slotItem.title = `${fullName} (${dayDateStr}): ${isSelected ? 'Marked posted. Click to unmark.' : 'Click to mark posted.'}`;
+
+          const circle = document.createElement("div");
+          circle.className = `circle-btn ${isSelected ? "selected" : ""}`;
+          circle.innerHTML = `
+            <span class="time-abbrev">${label}</span>
+            <span class="check-icon">✓</span>
+          `;
+
+          const slotLabel = document.createElement("div");
+          slotLabel.className = "slot-label";
+          slotLabel.textContent = fullName;
+          if (post?.note) {
+            const dot = document.createElement("span");
+            dot.className = "has-note-dot";
+            dot.title = `Note: ${post.note}`;
+            slotLabel.appendChild(dot);
+          }
+
+          slotItem.addEventListener("click", (e) => {
+            e.preventDefault();
+            toggleSlot(dayDateStr, slot);
+          });
+
+          slotItem.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toggleSlot(dayDateStr, slot);
+            }
+          });
+
+          slotItem.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            openNoteDialog(dayDateStr, slot);
+          });
+
+          slotItem.appendChild(circle);
+          slotItem.appendChild(slotLabel);
+          slotsList.appendChild(slotItem);
+        });
+
+        col.appendChild(slotsList);
+        weekRow.appendChild(col);
+      }
+
+      wrapper.appendChild(weekRow);
+      container.appendChild(wrapper);
+    });
+  }
+
+  // NOTE DIALOG
+  let activeNoteTarget = null;
+  function openNoteDialog(date, slot) {
+    activeNoteTarget = { date, slot };
+    const key = `${date}_${slot}`;
+    const p = store.posts[key];
+    document.getElementById("noteModalTitle").textContent = `Note for ${SLOT_NAMES[slot]} · ${date}`;
+    document.getElementById("noteModalSubtitle").textContent = "Add a quick headline, topic, or LinkedIn URL for your reference:";
+    document.getElementById("noteInput").value = p?.note || "";
+    document.getElementById("noteModal").classList.add("open");
+    document.getElementById("noteInput").focus();
+  }
+
+  function closeNoteDialog() {
+    document.getElementById("noteModal").classList.remove("open");
+    activeNoteTarget = null;
+  }
+
+  function saveNoteDialog() {
+    if (!activeNoteTarget) return;
+    const { date, slot } = activeNoteTarget;
+    const val = document.getElementById("noteInput").value.trim();
+    const key = `${date}_${slot}`;
+    const p = store.posts[key];
+
+    if (p) {
+      p.note = val;
+    } else if (val) {
+      store.posts[key] = { date, slot, posted: false, note: val };
+    }
+    saveToStorage();
+    closeNoteDialog();
+    updateUI();
+    showToast("Note saved");
+  }
+
+  // Client-side CSV Export
+  function exportCSV() {
+    let csv = "date,slot,time_label,posted,posted_at,note\n";
+    const keys = Object.keys(store.posts || {}).sort();
+    for (const k of keys) {
+      const p = store.posts[k];
+      if (p) {
+        const label = store.slotLabels[p.slot] || p.slot;
+        csv += `"${p.date}","${p.slot}","${label}",${p.posted ? "true" : "false"},"${p.postedAt || ""}","${(p.note || "").replace(/"/g, '""')}"\n`;
+      }
+    }
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `linkedin-posts-${formatYMD(new Date())}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("CSV downloaded");
+  }
+
+  // Reset / Clear Data
+  function clearAllData() {
+    if (confirm("Reset all saved post marks and start fresh?")) {
+      store.posts = {};
+      saveToStorage();
+      updateUI();
+      showToast("All data cleared. Fresh start!");
+    }
+  }
+
+  // EVENT LISTENERS
+  document.getElementById("prevWeekBtn").addEventListener("click", () => {
+    currentMonday = addDays(currentMonday, -7);
+    updateUI();
+  });
+
+  document.getElementById("nextWeekBtn").addEventListener("click", () => {
+    currentMonday = addDays(currentMonday, 7);
+    updateUI();
+  });
+
+  document.getElementById("todayBtn").addEventListener("click", () => {
+    currentMonday = getMondayOf(new Date());
+    updateUI();
+  });
+
+  document.getElementById("markTodayAllBtn").addEventListener("click", () => {
+    const todayStr = formatYMD(new Date());
+    toggleDay(todayStr);
+  });
+
+  document.querySelectorAll(".segmented-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".segmented-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      viewMode = parseInt(btn.dataset.view, 10);
+      updateUI();
+    });
+  });
+
+  document.getElementById("soundToggleBtn").addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    document.getElementById("soundIcon").textContent = soundEnabled ? "🔊" : "🔇";
+    showToast(soundEnabled ? "Audio clicks enabled" : "Audio muted");
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", exportCSV);
+  document.getElementById("resetDataBtn").addEventListener("click", clearAllData);
+
+  document.getElementById("closeNoteModal").addEventListener("click", closeNoteDialog);
+  document.getElementById("cancelNoteBtn").addEventListener("click", closeNoteDialog);
+  document.getElementById("saveNoteBtn").addEventListener("click", saveNoteDialog);
+  document.getElementById("noteModal").addEventListener("click", (e) => {
+    if (e.target.id === "noteModal") closeNoteDialog();
+  });
+
+  // Keyboard navigation
+  window.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+    if (e.key === "ArrowLeft") {
+      currentMonday = addDays(currentMonday, -7);
+      updateUI();
+    } else if (e.key === "ArrowRight") {
+      currentMonday = addDays(currentMonday, 7);
+      updateUI();
+    } else if (e.key === "t" || e.key === "T") {
+      currentMonday = getMondayOf(new Date());
+      updateUI();
+    } else if (e.key === "1") {
+      toggleSlot(formatYMD(new Date()), "08:00");
+    } else if (e.key === "2") {
+      toggleSlot(formatYMD(new Date()), "14:00");
+    } else if (e.key === "3") {
+      toggleSlot(formatYMD(new Date()), "20:00");
+    }
+  });
+
+  // Initialize
+  loadFromStorage();
+  updateUI();
+  syncWithBackendIfAvailable();
+})();
+</script>
+
+</body>
+</html>
