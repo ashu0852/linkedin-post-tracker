@@ -1185,6 +1185,17 @@
     return res;
   }
 
+  function parseYMD(str) {
+    if (!str) return new Date();
+    const parts = str.split("-");
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const date = new Date(y, m, d);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
   // Local Storage (Client-side persistence)
   const STORAGE_KEY = "linkedin_post_tracker_data";
 
