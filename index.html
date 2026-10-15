@@ -461,10 +461,42 @@
     color: var(--text-muted);
   }
 
+  .week-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   .week-progress-pill {
     font-size: 12.5px;
     font-weight: 600;
     color: var(--text-muted);
+  }
+
+  .btn-week-toggle {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    color: var(--linkedin-blue);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+  }
+
+  .btn-week-toggle:hover {
+    background: var(--linkedin-light);
+    border-color: var(--linkedin-blue);
+  }
+
+  .btn-week-toggle.is-done {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: var(--success);
   }
 
   /* ONE ROW HAS SEVEN THINGS: 7 DAYS GRID */
@@ -484,7 +516,7 @@
 
   /* DAY COLUMN (ONE OF THE 7 THINGS) */
   .day-col {
-    background: var(--bg);
+    background: var(--card);
     border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 12px 10px 14px;
@@ -493,6 +525,7 @@
     align-items: center;
     transition: all 0.2s ease;
     position: relative;
+    box-sizing: border-box;
   }
 
   .day-col:hover {
@@ -505,61 +538,82 @@
     box-shadow: 0 0 0 1px var(--linkedin-blue);
   }
 
+  /* FIXED-HEIGHT DAY HEADER: Exactly 56px across all 7 days for perfect row alignment */
   .day-header {
     width: 100%;
+    height: 56px;
+    min-height: 56px;
+    max-height: 56px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     margin-bottom: 14px;
     position: relative;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--line);
+    box-sizing: border-box;
   }
 
   .day-name {
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    line-height: 1;
+    width: 100%;
+  }
+
+  .day-col.is-today .day-name {
+    color: var(--linkedin-blue);
+  }
+
+  .today-pill {
+    background: var(--linkedin-blue);
+    color: #ffffff;
+    font-size: 8.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 1.5px 5px;
+    border-radius: 4px;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: middle;
   }
 
   .day-date-wrap {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 2px;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px;
+    line-height: 1;
   }
 
   .day-number {
     font-size: 18px;
     font-weight: 800;
     color: var(--text);
-    line-height: 1.1;
+    line-height: 1;
   }
 
   .day-month {
     font-size: 12px;
     font-weight: 600;
     color: var(--text-muted);
-  }
-
-  .today-pill {
-    background: var(--linkedin-blue);
-    color: #ffffff;
-    font-size: 9.5px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-top: 4px;
+    line-height: 1;
   }
 
   .day-actions {
     position: absolute;
-    top: -2px;
-    right: -2px;
+    top: 2px;
+    right: 2px;
   }
 
   .day-toggle-all {
@@ -646,12 +700,16 @@
     border-color: var(--circle-selected-bg);
     color: var(--circle-selected-text);
     box-shadow: 0 4px 12px var(--linkedin-glow);
-    animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* ONLY ANIMATE THE SPECIFIC CLICKED CIRCLE */
+  .circle-btn.pop-anim {
+    animation: popIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   @keyframes popIn {
-    0% { transform: scale(0.8); }
-    50% { transform: scale(1.12); }
+    0% { transform: scale(0.82); }
+    50% { transform: scale(1.15); }
     100% { transform: scale(1); }
   }
 
@@ -1174,6 +1232,49 @@
     updateUI();
   }
 
+  // Update check icon for a specific day column without full UI rebuild
+  function updateDayToggleIcon(date) {
+    const dayAllPosted = SLOTS.every(s => store.posts[`${date}_${s}`]?.posted);
+    const dayCols = document.querySelectorAll(`.day-col[data-day-date="${date}"]`);
+    dayCols.forEach(col => {
+      const toggleBtn = col.querySelector(".day-toggle-all");
+      if (toggleBtn) {
+        toggleBtn.title = dayAllPosted ? "Clear all posts for this day" : "Mark all 3 posts for this day";
+        toggleBtn.innerHTML = dayAllPosted
+          ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+          : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle></svg>`;
+      }
+    });
+  }
+
+  // Update week header progress and action button in place
+  function updateWeekHeaders() {
+    document.querySelectorAll(".week-wrapper[data-week-start]").forEach(wrapper => {
+      const monStr = wrapper.getAttribute("data-week-start");
+      const monDate = parseYMD(monStr);
+      let weekCount = 0;
+      for (let i = 0; i < 7; i++) {
+        const dStr = formatYMD(addDays(monDate, i));
+        for (const s of SLOTS) {
+          if (store.posts[`${dStr}_${s}`]?.posted) weekCount++;
+        }
+      }
+      const isAllDone = (weekCount === 21);
+      const pill = wrapper.querySelector("[data-week-progress]");
+      if (pill) {
+        pill.textContent = `${weekCount} / 21 posts (${Math.round((weekCount / 21) * 100)}%)`;
+      }
+      const btn = wrapper.querySelector("[data-week-btn]");
+      if (btn) {
+        btn.className = `btn-week-toggle ${isAllDone ? "is-done" : ""}`;
+        btn.innerHTML = isAllDone
+          ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Week Done (Clear)`
+          : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark Week Done`;
+        btn.title = isAllDone ? "Click to unmark all 21 slots for this week" : "Click to mark all 21 slots for this week as posted";
+      }
+    });
+  }
+
   function toggleSlot(date, slot, explicitVal) {
     const key = `${date}_${slot}`;
     const cur = store.posts[key];
@@ -1197,7 +1298,35 @@
 
     saveToStorage();
     playClickSound(willBePosted);
-    updateUI();
+
+    // DIRECT IN-PLACE DOM UPDATE: Animate ONLY the clicked circle, don't touch any other circle!
+    const slotItems = document.querySelectorAll(`.slot-item[data-slot-key="${key}"]`);
+    slotItems.forEach(item => {
+      const circle = item.querySelector(".circle-btn");
+      if (willBePosted) {
+        item.classList.add("is-selected");
+        item.setAttribute("aria-pressed", "true");
+        if (circle) {
+          circle.classList.add("selected");
+          // Add animation ONLY to this specific clicked circle
+          circle.classList.remove("pop-anim");
+          void circle.offsetWidth; // Reflow
+          circle.classList.add("pop-anim");
+          setTimeout(() => circle.classList.remove("pop-anim"), 300);
+        }
+      } else {
+        item.classList.remove("is-selected");
+        item.setAttribute("aria-pressed", "false");
+        if (circle) {
+          circle.classList.remove("selected");
+          circle.classList.remove("pop-anim");
+        }
+      }
+    });
+
+    updateDayToggleIcon(date);
+    updateWeekHeaders();
+    updateStatsBanner();
 
     const slotLabel = SLOT_LABELS[slot] || slot;
     showToast(willBePosted ? `Marked ${slotLabel} on ${date}` : `Unmarked ${slotLabel} on ${date}`);
@@ -1235,11 +1364,36 @@
           delete store.posts[key];
         }
       }
+
+      const slotItems = document.querySelectorAll(`.slot-item[data-slot-key="${key}"]`);
+      slotItems.forEach(item => {
+        const circle = item.querySelector(".circle-btn");
+        if (targetVal) {
+          item.classList.add("is-selected");
+          item.setAttribute("aria-pressed", "true");
+          if (circle) {
+            circle.classList.add("selected");
+            circle.classList.remove("pop-anim");
+            void circle.offsetWidth;
+            circle.classList.add("pop-anim");
+            setTimeout(() => circle.classList.remove("pop-anim"), 300);
+          }
+        } else {
+          item.classList.remove("is-selected");
+          item.setAttribute("aria-pressed", "false");
+          if (circle) {
+            circle.classList.remove("selected");
+            circle.classList.remove("pop-anim");
+          }
+        }
+      });
     }
 
     saveToStorage();
     playClickSound(targetVal);
-    updateUI();
+    updateDayToggleIcon(date);
+    updateWeekHeaders();
+    updateStatsBanner();
 
     showToast(targetVal ? `Marked all 3 posts for ${date}` : `Cleared posts for ${date}`);
 
@@ -1249,6 +1403,68 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date, posted: targetVal })
       }).catch(() => {});
+    }
+  }
+
+  // Toggle all slots for an entire week or date list
+  function toggleDatesList(dateList, targetVal) {
+    if (targetVal === undefined) {
+      const allDone = dateList.every(d => SLOTS.every(s => store.posts[`${d}_${s}`]?.posted));
+      targetVal = !allDone;
+    }
+
+    for (const d of dateList) {
+      for (const slot of SLOTS) {
+        const key = `${d}_${slot}`;
+        const cur = store.posts[key];
+        if (targetVal) {
+          store.posts[key] = {
+            date: d,
+            slot,
+            posted: true,
+            postedAt: cur?.postedAt || new Date().toISOString(),
+            note: cur?.note || ""
+          };
+        } else {
+          if (cur?.note) {
+            store.posts[key] = { date: d, slot, posted: false, note: cur.note };
+          } else {
+            delete store.posts[key];
+          }
+        }
+
+        const slotItems = document.querySelectorAll(`.slot-item[data-slot-key="${key}"]`);
+        slotItems.forEach(item => {
+          const circle = item.querySelector(".circle-btn");
+          if (targetVal) {
+            item.classList.add("is-selected");
+            item.setAttribute("aria-pressed", "true");
+            if (circle) circle.classList.add("selected");
+          } else {
+            item.classList.remove("is-selected");
+            item.setAttribute("aria-pressed", "false");
+            if (circle) circle.classList.remove("selected");
+          }
+        });
+      }
+      updateDayToggleIcon(d);
+    }
+
+    saveToStorage();
+    playClickSound(targetVal);
+    updateWeekHeaders();
+    updateStatsBanner();
+
+    showToast(targetVal ? `Marked all ${dateList.length * SLOTS.length} slots as done!` : `Cleared slots for the week`);
+
+    if (window.location.protocol === "http:" && window.location.port) {
+      for (const d of dateList) {
+        fetch("/api/tracker/toggle-day", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: d, posted: targetVal })
+        }).catch(() => {});
+      }
     }
   }
 
@@ -1396,6 +1612,7 @@
     const isToday = (dayDateFormatted === formatYMD(new Date()));
     const col = document.createElement("div");
     col.className = `day-col ${isToday ? "is-today" : ""}`;
+    col.setAttribute("data-day-date", dayDateFormatted);
 
     const dayAllPosted = SLOTS.every(s => store.posts[`${dayDateFormatted}_${s}`]?.posted);
 
@@ -1405,7 +1622,14 @@
     const dayName = document.createElement("div");
     dayName.className = "day-name";
     const actualIdx = dayIdx !== undefined ? dayIdx : (dayDate.getDay() === 0 ? 6 : dayDate.getDay() - 1);
-    dayName.textContent = FULL_DAYS[actualIdx];
+    const dayStr = FULL_DAYS[actualIdx];
+
+    // INLINE COMPACT TODAY PILL: Never increases header height, preserving row alignment
+    if (isToday) {
+      dayName.innerHTML = `${dayStr} <span class="today-pill">TODAY</span>`;
+    } else {
+      dayName.textContent = dayStr;
+    }
 
     const dateWrap = document.createElement("div");
     dateWrap.className = "day-date-wrap";
@@ -1423,13 +1647,6 @@
 
     dayHeader.appendChild(dayName);
     dayHeader.appendChild(dateWrap);
-
-    if (isToday) {
-      const todayBadge = document.createElement("div");
-      todayBadge.className = "today-pill";
-      todayBadge.textContent = "Today";
-      dayHeader.appendChild(todayBadge);
-    }
 
     const actionWrap = document.createElement("div");
     actionWrap.className = "day-actions";
@@ -1464,10 +1681,12 @@
       slotItem.setAttribute("role", "button");
       slotItem.setAttribute("tabindex", "0");
       slotItem.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      slotItem.setAttribute("data-slot-key", key);
       slotItem.title = `${fullName} (${dayDateFormatted}): ${isSelected ? 'Marked posted. Click to unmark.' : 'Click to mark posted.'}`;
 
       const circle = document.createElement("div");
       circle.className = `circle-btn ${isSelected ? "selected" : ""}`;
+      circle.setAttribute("data-slot-key", key);
       circle.innerHTML = `
         <span class="time-abbrev">${label}</span>
         <span class="check-icon">✓</span>
@@ -1556,12 +1775,30 @@
           }
         }
         const totalChunkSlots = chunk.length * SLOTS.length;
+        const isChunkDone = (chunkCount === totalChunkSlots && totalChunkSlots > 0);
+
+        const actionsGroup = document.createElement("div");
+        actionsGroup.className = "week-actions-group";
+
         const progress = document.createElement("div");
         progress.className = "week-progress-pill";
         progress.textContent = `${chunkCount} / ${totalChunkSlots} posts (${Math.round((chunkCount / totalChunkSlots) * 100)}%)`;
 
+        const markChunkBtn = document.createElement("button");
+        markChunkBtn.className = `btn-week-toggle ${isChunkDone ? "is-done" : ""}`;
+        markChunkBtn.innerHTML = isChunkDone
+          ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Range Done (Clear)`
+          : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark Range Done`;
+        markChunkBtn.title = isChunkDone ? "Click to unmark all slots in this range" : "Click to mark all slots in this range as posted";
+        markChunkBtn.addEventListener("click", () => {
+          toggleDatesList(chunk, !isChunkDone);
+        });
+
+        actionsGroup.appendChild(progress);
+        actionsGroup.appendChild(markChunkBtn);
+
         header.appendChild(title);
-        header.appendChild(progress);
+        header.appendChild(actionsGroup);
         wrapper.appendChild(header);
 
         const weekRow = document.createElement("div");
@@ -1607,9 +1844,11 @@
       weeksToRender.forEach(monDate => {
         const sunDate = addDays(monDate, 6);
         const isCurrentWeek = (formatYMD(getMondayOf(new Date())) === formatYMD(monDate));
+        const monYMD = formatYMD(monDate);
 
         const wrapper = document.createElement("div");
         wrapper.className = "week-wrapper";
+        wrapper.setAttribute("data-week-start", monYMD);
 
         const header = document.createElement("div");
         header.className = "week-header";
@@ -1621,19 +1860,42 @@
         title.innerHTML = `Week: ${monStr} – ${sunStr} ${isCurrentWeek ? '<span class="week-badge">Current Week</span>' : ''}`;
 
         let weekCount = 0;
+        const weekDates = [];
         for (let i = 0; i < 7; i++) {
           const dStr = formatYMD(addDays(monDate, i));
+          weekDates.push(dStr);
           for (const s of SLOTS) {
             if (store.posts[`${dStr}_${s}`]?.posted) weekCount++;
           }
         }
 
+        const isAllWeekDone = (weekCount === 21);
+
+        const actionsGroup = document.createElement("div");
+        actionsGroup.className = "week-actions-group";
+
         const progress = document.createElement("div");
         progress.className = "week-progress-pill";
+        progress.setAttribute("data-week-progress", monYMD);
         progress.textContent = `${weekCount} / 21 posts (${Math.round((weekCount / 21) * 100)}%)`;
 
+        const markWeekBtn = document.createElement("button");
+        markWeekBtn.className = `btn-week-toggle ${isAllWeekDone ? "is-done" : ""}`;
+        markWeekBtn.setAttribute("data-week-btn", monYMD);
+        markWeekBtn.innerHTML = isAllWeekDone 
+          ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Week Done (Clear)`
+          : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Mark Week Done`;
+        markWeekBtn.title = isAllWeekDone ? "Click to unmark all 21 slots for this week" : "Click to mark all 21 slots for this week as posted";
+
+        markWeekBtn.addEventListener("click", () => {
+          toggleDatesList(weekDates, !isAllWeekDone);
+        });
+
+        actionsGroup.appendChild(progress);
+        actionsGroup.appendChild(markWeekBtn);
+
         header.appendChild(title);
-        header.appendChild(progress);
+        header.appendChild(actionsGroup);
         wrapper.appendChild(header);
 
         const weekRow = document.createElement("div");
